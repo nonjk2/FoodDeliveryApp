@@ -1,10 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import * as React from 'react';
 import {NavigationContainer, ParamListBase} from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import {createNativeStackNavigator, NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Text, TouchableHighlight, View} from 'react-native';
 import {useCallback} from 'react';
 
@@ -35,7 +32,13 @@ function DetailsScreen({navigation}: DetailsScreenProps) {
   }, [navigation]);
 
   return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: 'yellow',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
       <TouchableHighlight onPress={onClick}>
         <Text>Details Screen</Text>
       </TouchableHighlight>
@@ -48,14 +51,8 @@ function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{title: 'Overview'}}
-        />
-        <Stack.Screen name="Details">
-          {props => <DetailsScreen {...props} />}
-        </Stack.Screen>
+        <Stack.Screen name="Home" component={HomeScreen} options={{title: 'Overview'}} />
+        <Stack.Screen name="Details">{props => <DetailsScreen {...props} />}</Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
