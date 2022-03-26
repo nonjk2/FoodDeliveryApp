@@ -1,28 +1,58 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useCallback, useRef, useState} from 'react';
-import {Alert, Pressable, StyleSheet, Text, View} from 'react-native';
-import {TextInput} from 'react-native-gesture-handler';
+import {Alert, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {RootStackParamList} from '../../App';
+import {useAppDispatch} from '../store';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import userSlice from '../slices/user';
+import axios, {AxiosError} from 'axios';
 
 type SignInScreenProps = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
 function SignIn({navigation}: SignInScreenProps) {
   const [email, setemail] = useState('');
   const [password, setpassword] = useState('');
-
+  const dispatch = useAppDispatch();
+  const [loading, setLoading] = useState(false);
   const emailref = useRef<TextInput | null>(null);
   const passwordref = useRef<TextInput | null>(null);
   const nameref = useRef<TextInput | null>(null);
-  const onSubmit = useCallback(() => {
+  const onSubmit = useCallback(async () => {
+    if (loading) {
+      return;
+    }
     if (!email || !email.trim()) {
       return Alert.alert('알림', '이메일을 입력해주세요.');
     }
     if (!password || !password.trim()) {
       return Alert.alert('알림', '비밀번호를 입력해주세요.');
     }
-    Alert.alert('알림', '로그인 되었습니다.');
-  }, [email, password]);
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:3105/login', {
+        email,
+        password,
+      });
+      console.log(response.data);
+      Alert.alert('알림', '로그인 되었습니다.');
+      dispatch(
+        userSlice.actions.setUser({
+          name: response.data.data.name,
+          email: response.data.data.email,
+          accessToken: response.data.data.accessToken,
+        }),
+      );
+      await EncryptedStorage.setItem('refreshToken', response.data.data.refreshToken);
+    } catch (error) {
+      const errorResponse = (error as AxiosError).response;
+      if (errorResponse) {
+        Alert.alert('알림', errorResponse.data.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, dispatch, email, password]);
 
   const onChangeEmail = useCallback(text => {
     setemail(text);
@@ -46,6 +76,7 @@ function SignIn({navigation}: SignInScreenProps) {
             onChangeText={onChangeEmail}
             style={styles.textInput}
             value={email}
+            autoCapitalize="none"
             importantForAutofill="yes"
             autoComplete="email"
             textContentType="emailAddress"
@@ -64,7 +95,8 @@ function SignIn({navigation}: SignInScreenProps) {
             value={password}
             onChangeText={onChangePassword}
             style={styles.textInput}
-            secureTextEntry
+            // secureTextEntry
+            autoCapitalize="none"
             importantForAutofill="yes"
             autoComplete="password"
             textContentType="password"
